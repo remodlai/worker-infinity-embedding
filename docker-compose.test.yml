@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  embedding:
+    build:
+      context: .
+      dockerfile: Dockerfile.embedding
+    ports:
+      - "8001:8001"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  reranker:
+    build:
+      context: .
+      dockerfile: Dockerfile.reranker
+    ports:
+      - "8002:8002"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  infinity:
+    build:
+      context: .
+      dockerfile: Dockerfile.infinity
+    ports:
+      - "8003:8003"
+    environment:
+      - EMBEDDING_SERVICE_URL=http://embedding:8001
+      - RERANKER_SERVICE_URL=http://reranker:8002
+    depends_on:
+      - embedding
+      - reranker

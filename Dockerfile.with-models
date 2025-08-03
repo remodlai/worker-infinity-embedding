@@ -1,6 +1,9 @@
 FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04 AS base
 
-ENV HF_HOME=/runpod-volume
+# Pre-download models during build
+ENV HF_HOME=/models
+ENV TRANSFORMERS_CACHE=/models/huggingface
+ENV HF_DATASETS_CACHE=/models/huggingface/datasets
 
 # install python and other packages
 RUN apt-get update && apt-get install -y \
@@ -24,6 +27,19 @@ RUN pip install torch==2.5.1+cu124 --index-url https://download.pytorch.org/whl/
 
 # Install sentence-transformers and optimum (needed for torch backend and BetterTransformer)
 RUN pip install sentence-transformers optimum accelerate
+
+# Pre-download the Qwen3 0.6B models
+RUN python -c "from transformers import AutoModel, AutoTokenizer; \
+    print('Downloading Qwen3-Embedding-0.6B...'); \
+    AutoModel.from_pretrained('Qwen/Qwen3-Embedding-0.6B'); \
+    AutoTokenizer.from_pretrained('Qwen/Qwen3-Embedding-0.6B'); \
+    print('Downloading Qwen3-Reranker-0.6B...'); \
+    AutoModel.from_pretrained('Qwen/Qwen3-Reranker-0.6B'); \
+    AutoTokenizer.from_pretrained('Qwen/Qwen3-Reranker-0.6B'); \
+    print('Models downloaded successfully!')"
+
+# Set HF_HOME back to runpod-volume for runtime
+ENV HF_HOME=/runpod-volume
 
 # Add src files
 ADD src .

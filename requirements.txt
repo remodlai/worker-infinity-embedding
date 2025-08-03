@@ -1,4 +1,5 @@
 runpod~=1.7.0
-infinity-emb[all]==0.0.76
+git+https://github.com/remodlai/infinity-embeddings-qwen3support.git@main#egg=infinity-emb[torch]&subdirectory=libs/infinity_emb
+sentence-transformers
 einops # deployment of custom code with nomic
 git+https://github.com/pytorch-labs/float8_experimental.git

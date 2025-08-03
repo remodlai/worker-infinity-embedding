@@ -1,0 +1,37 @@
+# Container 1: Model Server with 0.6B models embedded
+FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+# Install Python 3.12
+RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    git \
+    wget \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt-get update \
+    && apt-get install -y python3.12 python3.12-dev python3.12-venv \
+    && wget https://bootstrap.pypa.io/get-pip.py \
+    && python3.12 get-pip.py \
+    && ln -sf /usr/bin/python3.12 /usr/bin/python \
+    && ln -sf /usr/local/bin/pip3.12 /usr/bin/pip \
+    && rm get-pip.py \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install model serving dependencies
+RUN pip install --no-cache-dir \
+    torch==2.5.1+cu124 --index-url https://download.pytorch.org/whl/test/cu124 \
+    transformers \
+    fastapi \
+    uvicorn
+
+# Copy pre-downloaded models
+COPY models/hub /models
+
+# Copy model server script
+COPY src/model_server.py /model_server.py
+
+EXPOSE 8001
+
+CMD ["uvicorn", "model_server:app", "--host", "0.0.0.0", "--port", "8001"]

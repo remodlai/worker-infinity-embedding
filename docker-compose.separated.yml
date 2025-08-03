@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  embedding:
+    build:
+      context: .
+      dockerfile: Dockerfile.embedding
+    volumes:
+      - ./models:/models:ro
+      - runpod-volume:/runpod-volume
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - infinity-net
+
+  reranker:
+    build:
+      context: .
+      dockerfile: Dockerfile.reranker
+    volumes:
+      - ./models:/models:ro
+      - runpod-volume:/runpod-volume
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - infinity-net
+
+  infinity:
+    build:
+      context: .
+      dockerfile: Dockerfile.infinity
+    volumes:
+      - runpod-volume:/runpod-volume
+    environment:
+      - MODEL_NAMES=Qwen/Qwen3-Embedding-0.6B;Qwen/Qwen3-Reranker-0.6B
+      - EMBEDDING_SERVICE_URL=http://embedding:8001
+      - RERANKER_SERVICE_URL=http://reranker:8002
+    depends_on:
+      - embedding
+      - reranker
+    networks:
+      - infinity-net
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    ports:
+      - "8000:8000"
+    environment:
+      - EMBEDDING_SERVICE_URL=http://embedding:8001
+      - RERANKER_SERVICE_URL=http://reranker:8002
+      - INFINITY_SERVICE_URL=http://infinity:8003
+    depends_on:
+      - infinity
+    networks:
+      - infinity-net
+    volumes:
+      - ./test_input.json:/test_input.json:ro
+
+networks:
+  infinity-net:
+    driver: bridge
+
+volumes:
+  runpod-volume:
+    driver: local

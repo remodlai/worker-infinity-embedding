@@ -2,15 +2,24 @@ FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04 AS base
 
 ENV HF_HOME=/runpod-volume
 
+# Set timezone to avoid interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
 # install python and other packages
 RUN apt-get update && apt-get install -y \
-    python3.11 \
-    python3-pip \
+    software-properties-common \
     git \
     wget \
     libgl1 \
-    && ln -sf /usr/bin/python3.11 /usr/bin/python \
-    && ln -sf /usr/bin/pip3 /usr/bin/pip
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt-get update \
+    && apt-get install -y python3.12 python3.12-dev python3.12-venv \
+    && wget https://bootstrap.pypa.io/get-pip.py \
+    && python3.12 get-pip.py \
+    && ln -sf /usr/bin/python3.12 /usr/bin/python \
+    && ln -sf /usr/local/bin/pip3.12 /usr/bin/pip \
+    && rm get-pip.py
 
 # install uv
 RUN pip install uv
@@ -24,6 +33,10 @@ RUN pip install torch==2.5.1+cu124 --index-url https://download.pytorch.org/whl/
 
 # Install sentence-transformers and optimum (needed for torch backend and BetterTransformer)
 RUN pip install sentence-transformers optimum accelerate
+
+# Copy pre-downloaded models to the image
+# This expects the models to be downloaded in the models/ directory
+COPY models /models
 
 # Add src files
 ADD src .

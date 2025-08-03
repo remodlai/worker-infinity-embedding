@@ -1,0 +1,21 @@
+# RunPod worker image based on our tested infinity-emb base
+ARG BASE_IMAGE=ghcr.io/remodlai/infinity-qwen3-base:latest
+FROM ${BASE_IMAGE}
+
+# Install RunPod SDK
+RUN pip install --no-cache-dir runpod~=1.7.0
+
+# Set environment variables for RunPod volume
+ENV HF_HOME=/runpod-volume
+ENV TRANSFORMERS_CACHE=/runpod-volume/huggingface
+ENV HF_DATASETS_CACHE=/runpod-volume/huggingface/datasets
+
+# Add the worker source code
+WORKDIR /
+ADD src .
+
+# Add test input for local testing
+COPY test_input.json /test_input.json
+
+# Start the handler
+CMD ["python", "-u", "/handler.py"]

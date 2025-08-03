@@ -13,8 +13,9 @@ services:
                 count: all
                 capabilities: [gpu]
       environment:
-        MODEL_NAMES: "BAAI/bge-small-en-v1.5"
+        MODEL_NAMES: "Qwen/Qwen3-Embedding-4B;Qwen/Qwen3-Reranker-4B"
         NVIDIA_VISIBLE_DEVICES: "all"
+        HF_HOME: "/runpod-volume"
       volumes:
         - ./data/runpod-volume:/runpod-volume
       ports:

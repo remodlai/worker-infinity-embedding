@@ -1,0 +1,26 @@
+# Container 4: RunPod Worker (lightweight)
+FROM python:3.12-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+# Install minimal dependencies
+RUN pip install --no-cache-dir \
+    runpod~=1.7.0 \
+    httpx \
+    fastapi
+
+# Add RunPod handler and routing logic
+COPY src/handler.py /handler.py
+COPY src/router.py /router.py
+COPY src/utils.py /utils.py
+
+# Configuration for model endpoints
+ENV EMBEDDING_SERVICE_URL=http://embedding:8001
+ENV RERANKER_SERVICE_URL=http://reranker:8002
+ENV INFINITY_SERVICE_URL=http://infinity:8003
+
+EXPOSE 8000
+
+ENTRYPOINT ["python", "-u"]
+CMD ["/handler.py"]

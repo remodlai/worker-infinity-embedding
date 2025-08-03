@@ -1,0 +1,65 @@
+# Base image with the forked infinity-emb for Qwen3 support
+FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
+
+# Install Python and essential packages
+RUN apt-get update && apt-get install -y \
+    python3.11 \
+    python3-pip \
+    git \
+    wget \
+    libgl1 \
+    && ln -sf /usr/bin/python3.11 /usr/bin/python \
+    && ln -sf /usr/bin/pip3 /usr/bin/pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install PyTorch first
+RUN pip install torch==2.5.1+cu124 --index-url https://download.pytorch.org/whl/test/cu124 --no-cache-dir
+
+# Install the base dependencies
+RUN pip install --no-cache-dir \
+    sentence-transformers \
+    transformers \
+    einops \
+    numpy \
+    scipy
+
+# Install the forked infinity-emb
+RUN pip install --no-cache-dir \
+    git+https://github.com/aryasaatvik/infinity.git@chore/update-transformers-qwen3#subdirectory=libs/infinity_emb
+
+# Install float8 experimental (for optimization)
+RUN pip install --no-cache-dir \
+    git+https://github.com/pytorch-labs/float8_experimental.git
+
+# Test that infinity-emb is properly installed
+RUN python -c "from infinity_emb import EngineArgs, AsyncEngineArray; print('Infinity-emb imported successfully')"
+
+# Test that sentence_transformers is available
+RUN python -c "import sentence_transformers; print(f'sentence_transformers version: {sentence_transformers.__version__}')"
+
+# Set environment variables for model caching
+ENV HF_HOME=/models
+ENV TRANSFORMERS_CACHE=/models/huggingface
+ENV HF_DATASETS_CACHE=/models/huggingface/datasets
+
+WORKDIR /app
+
+# Add a simple test script
+RUN echo 'from infinity_emb import EngineArgs, AsyncEngineArray\n\
+import asyncio\n\
+\n\
+async def test():\n\
+    engine_args = EngineArgs(\n\
+        model_name_or_path="BAAI/bge-small-en-v1.5",\n\
+        batch_size=32,\n\
+        engine="torch"\n\
+    )\n\
+    engine = AsyncEngineArray.from_args([engine_args])\n\
+    await engine.astart()\n\
+    print("Engine started successfully!")\n\
+    await engine.astop()\n\
+\n\
+if __name__ == "__main__":\n\
+    asyncio.run(test())' > /app/test_infinity.py
+
+CMD ["python", "/app/test_infinity.py"]
