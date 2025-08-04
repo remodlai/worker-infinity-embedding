@@ -19,8 +19,8 @@ except ImportError:
     logger.error("Transformers not installed!")
 
 # Configure model paths
-os.environ["MODEL_NAMES"] = "/models/Qwen3-Embedding-0.6B"
-logger.info("Using embedding model from container for optimal performance")
+os.environ["MODEL_NAMES"] = "/models/Qwen3-Embedding-0.6B;/models/Qwen3-Reranker-0.6B"
+logger.info("Using Qwen3 embedding and reranker models from container for optimal performance")
 
 # Set HF_HOME if volume is mounted
 if os.path.exists("/runpod-volume"):
@@ -63,9 +63,16 @@ async def async_generator_handler(job: dict[str, Any]):
                 return create_error_response(
                     "Did not specify model in openai_input"
                 ).model_dump()
+            # Extract instruction parameters from extra_body if present
+            extra_body = openai_input.get("extra_body", {})
+            instruction = extra_body.get("instruction")
+            prompt_type = extra_body.get("prompt_type")
+            
             call_fn, kwargs = embedding_service.route_openai_get_embeddings, {
                 "embedding_input": openai_input.get("input"),
                 "model_name": model_name,
+                "instruction": instruction,
+                "prompt_type": prompt_type,
                 "return_as_list": True,
             }
         else:
@@ -85,6 +92,8 @@ async def async_generator_handler(job: dict[str, Any]):
             call_fn, kwargs = embedding_service.route_openai_get_embeddings, {
                 "embedding_input": job_input.get("input"),
                 "model_name": job_input.get("model"),
+                "instruction": job_input.get("instruction"),
+                "prompt_type": job_input.get("prompt_type"),
             }
         else:
             return create_error_response(f"Invalid input: {job}").model_dump()

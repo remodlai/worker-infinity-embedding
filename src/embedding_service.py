@@ -59,12 +59,34 @@ class EmbeddingService:
         embedding_input: str | list[str],
         model_name: str,
         return_as_list: bool = False,
+        instruction: str | None = None,
+        prompt_type: str | None = None,
     ):
         """returns embeddings for the input text"""
         if not self.is_running:
             await self.start()
         if not isinstance(embedding_input, list):
             embedding_input = [embedding_input]
+
+        # Apply instruction if provided
+        if instruction or prompt_type:
+            processed_input = []
+            for text in embedding_input:
+                # Build the instruction prefix
+                if instruction:
+                    # Custom instruction provided
+                    prefix = f"Instruct: {instruction}\nQuery: "
+                elif prompt_type == "query":
+                    # Use default query instruction for Qwen3
+                    prefix = "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "
+                elif prompt_type == "document":
+                    # Documents typically don't have instructions for Qwen3
+                    prefix = ""
+                else:
+                    prefix = ""
+                
+                processed_input.append(prefix + text)
+            embedding_input = processed_input
 
         embeddings, usage = await self.engine_array[model_name].embed(embedding_input)
         if return_as_list:
