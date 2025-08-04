@@ -1,16 +1,47 @@
 import runpod
 from utils import create_error_response
 from typing import Any
+import os
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Run startup configuration
+logger.info("Starting RunPod worker...")
+
+# Check transformers version
+try:
+    import transformers
+    logger.info(f"Transformers version: {transformers.__version__}")
+except ImportError:
+    logger.error("Transformers not installed!")
+
+# Configure model paths
+os.environ["MODEL_NAMES"] = "/models/Qwen3-Embedding-0.6B"
+logger.info("Using embedding model from container for optimal performance")
+
+# Set HF_HOME if volume is mounted
+if os.path.exists("/runpod-volume"):
+    os.environ['HF_HOME'] = "/runpod-volume"
+    logger.info("Set HF_HOME to /runpod-volume for model cache")
+
+# Import embedding service after configuration
 from embedding_service import EmbeddingService
 
 # Gracefully catch configuration errors (e.g. missing env vars) so the user sees
 # a clean message instead of a full Python traceback when the container starts.
 try:
+    logger.info("Initializing embedding service...")
     embedding_service = EmbeddingService()
+    logger.info("Embedding service initialized successfully")
 except Exception as e:  # noqa: BLE001  (intercept everything on startup)
     import sys
+    import traceback
 
     sys.stderr.write(f"\nstartup failed: {e}\n")
+    sys.stderr.write(f"Traceback:\n{traceback.format_exc()}\n")
     sys.exit(1)
 
 
@@ -65,9 +96,17 @@ async def async_generator_handler(job: dict[str, Any]):
 
 
 if __name__ == "__main__":
-    runpod.serverless.start(
-        {
-            "handler": async_generator_handler,
-            "concurrency_modifier": lambda x: embedding_service.config.runpod_max_concurrency,
-        }
-    )
+    logger.info("Starting RunPod serverless handler...")
+    
+    try:
+        runpod.serverless.start(
+            {
+                "handler": async_generator_handler,
+                "concurrency_modifier": lambda x: embedding_service.config.runpod_max_concurrency,
+            }
+        )
+    except Exception as e:
+        logger.error(f"Failed to start RunPod serverless: {e}")
+        import traceback
+        traceback.print_exc()
+        raise

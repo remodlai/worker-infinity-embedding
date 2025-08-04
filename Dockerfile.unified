@@ -1,4 +1,4 @@
-# Infinity Embedding Engine Container
+# Unified Dockerfile for RunPod Infinity Worker with Qwen3 models
 FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -26,18 +26,29 @@ RUN pip install --no-cache-dir torch==2.5.1 --index-url https://download.pytorch
 # Install infinity-emb from our fork with Qwen3 support (with all extras)
 RUN pip install --no-cache-dir "git+https://github.com/remodlai/infinity-embeddings-qwen3support.git@main#subdirectory=libs/infinity_emb&egg=infinity-emb[torch,server]"
 
-# Install additional dependencies
-# The fork requires transformers >=4.51.3,<=5.0 for Qwen3 support
+# Install additional dependencies with specific versions for compatibility
 RUN pip install --no-cache-dir transformers==4.51.3 sentence-transformers accelerate
 
-# Verify infinity_emb is installed
-RUN which infinity_emb
+# Install uv for faster dependency installation
+RUN pip install uv
 
-# Copy models into the container
+# Install RunPod and other worker dependencies
+COPY requirements.txt /requirements.txt
+RUN uv pip install -r /requirements.txt --system
+
+# Copy models into the container (these layers will be cached)
 COPY models/hub/models--Qwen--Qwen3-Embedding-0.6B /models/Qwen3-Embedding-0.6B
 COPY models/hub/models--Qwen--Qwen3-Reranker-0.6B /models/Qwen3-Reranker-0.6B
 
-EXPOSE 7997
+# Add worker source files
+ADD src .
 
-# Default CMD - can be overridden
-CMD ["infinity_emb", "v2", "--help"]
+# Add test input
+COPY test_input.json /test_input.json
+
+# Expose the RunPod serverless port
+EXPOSE 8000
+
+# Use ENTRYPOINT and CMD as recommended by RunPod
+ENTRYPOINT ["python", "-u"]
+CMD ["/handler.py"]

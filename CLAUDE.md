@@ -71,3 +71,9 @@ The service supports two API styles:
 - Implements both embedding generation and document reranking
 - Error responses follow OpenAI error format for compatibility
 - Graceful startup error handling with clear error messages
+- **Model Persistence**: On first run, models are copied from container to RunPod volume (rtjix2riw9). Subsequent runs use models from volume to avoid re-downloading
+- Models included in container: Qwen3-Embedding-0.6B and Qwen3-Reranker-0.6B
+
+## Development Guidelines
+
+- You must have me run docker build commands

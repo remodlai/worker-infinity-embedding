@@ -1,22 +1,12 @@
-variable "PUSH" {
-  default = "true"
+group "default" {
+  targets = ["worker"]
 }
 
-variable "REPOSITORY" {
-  default = "runpod"
-}
-
-variable "WORKER_VERSION" {
-  default = "0.0.1"
-}
-
-group "all" {
-  targets = ["worker-1241"]
-}
-
-target "worker-1241" {
-  tags = ["${REPOSITORY}/worker-infinity-embedding:${WORKER_VERSION}-cuda12.4.1"]
-  context = "."
-  dockerfile = "Dockerfile"
-  output = ["type=docker,push=${PUSH}"]
+target "worker" {
+  dockerfile = "Dockerfile.unified"
+  tags = ["ghcr.io/remodlai/worker-infinity-embedding:qwen3-0.6B-unified"]
+  platforms = ["linux/amd64"]
+  args = {
+    BUILDKIT_INLINE_CACHE = "1"
+  }
 }
