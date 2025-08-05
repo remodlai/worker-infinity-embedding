@@ -141,33 +141,60 @@ export default {
       }));
     };
     
+    // Helper to warm a service multiple times
+    const warmServiceMultipleTimes = async (service: string) => {
+      // Random number of calls (3-5)
+      const numCalls = Math.floor(Math.random() * 3) + 3;
+      console.log(`Warming ${service} service with ${numCalls} calls`);
+      
+      const responseTimes: number[] = [];
+      
+      for (let i = 0; i < numCalls; i++) {
+        const startTime = Date.now();
+        
+        try {
+          if (service === 'embedding') {
+            await warmEmbeddingService(env);
+          } else if (service === 'rerank') {
+            await warmRerankerService(env);
+          }
+          
+          const responseTime = Date.now() - startTime;
+          responseTimes.push(responseTime);
+          console.log(`${service} call ${i + 1}/${numCalls} completed in ${responseTime}ms`);
+        } catch (error) {
+          console.error(`${service} call ${i + 1}/${numCalls} failed:`, error);
+        }
+        
+        // Random delay between calls (1-5 seconds), except after the last call
+        if (i < numCalls - 1) {
+          const callDelay = Math.floor(Math.random() * 4000) + 1000;
+          await new Promise(resolve => setTimeout(resolve, callDelay));
+        }
+      }
+      
+      // Update average response time based on all successful calls
+      if (responseTimes.length > 0) {
+        const avgResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+        await updateResponseTime(service, avgResponseTime);
+      }
+    };
+    
     // Warm services in random order
     const shuffled = activeServices.sort(() => 0.5 - Math.random());
     
     for (const service of shuffled) {
-      const startTime = Date.now();
-      
-      if (service === 'embedding') {
-        await warmEmbeddingService(env);
-        await updateResponseTime('embedding', Date.now() - startTime);
-      } else if (service === 'rerank') {
-        await warmRerankerService(env);
-        await updateResponseTime('rerank', Date.now() - startTime);
+      // Sometimes skip a service (10% chance) - but only if both are active
+      if (activeServices.length === 2 && Math.random() < 0.1) {
+        console.log(`Randomly skipping ${service} warmup this cycle`);
+        continue;
       }
       
-      // Random delay between services
+      await warmServiceMultipleTimes(service);
+      
+      // Random delay between services (5-15 seconds)
       if (shuffled.indexOf(service) < shuffled.length - 1) {
         await new Promise(resolve => setTimeout(resolve, randomDelay()));
-      }
-    }
-    
-    // Sometimes skip one service (10% chance each) - but only if both are active
-    if (activeServices.length === 2) {
-      const skipChance = Math.random();
-      if (skipChance < 0.1) {
-        console.log('Randomly skipping embedding warmup this cycle');
-      } else if (skipChance < 0.2) {
-        console.log('Randomly skipping reranker warmup this cycle');
       }
     }
   },
@@ -196,8 +223,21 @@ export default {
     if (pathname === '/api/utilities/serverless/embedding/start' && request.method === 'POST') {
       await setServiceConfig('embedding', { ...await getServiceConfig('embedding'), active: true });
       
-      // Trigger warmup immediately
-      ctx.waitUntil(warmEmbeddingService(env));
+      // Trigger multiple warmup calls immediately
+      ctx.waitUntil((async () => {
+        const numCalls = Math.floor(Math.random() * 3) + 3; // 3-5 calls
+        console.log(`Manual trigger: warming embedding service with ${numCalls} calls`);
+        
+        for (let i = 0; i < numCalls; i++) {
+          warmEmbeddingService(env).catch(err => 
+            console.error(`Manual embedding warmup call ${i + 1} failed:`, err)
+          );
+          
+          if (i < numCalls - 1) {
+            await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 4000) + 1000));
+          }
+        }
+      })());
       
       return new Response(JSON.stringify({
         status: 'started',
@@ -244,8 +284,21 @@ export default {
     if (pathname === '/api/utilities/serverless/rerank/start' && request.method === 'POST') {
       await setServiceConfig('rerank', { ...await getServiceConfig('rerank'), active: true });
       
-      // Trigger warmup immediately
-      ctx.waitUntil(warmRerankerService(env));
+      // Trigger multiple warmup calls immediately
+      ctx.waitUntil((async () => {
+        const numCalls = Math.floor(Math.random() * 3) + 3; // 3-5 calls
+        console.log(`Manual trigger: warming reranker service with ${numCalls} calls`);
+        
+        for (let i = 0; i < numCalls; i++) {
+          warmRerankerService(env).catch(err => 
+            console.error(`Manual reranker warmup call ${i + 1} failed:`, err)
+          );
+          
+          if (i < numCalls - 1) {
+            await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 4000) + 1000));
+          }
+        }
+      })());
       
       return new Response(JSON.stringify({
         status: 'started',

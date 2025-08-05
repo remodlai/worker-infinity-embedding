@@ -91,11 +91,13 @@ GET /api/utilities/serverless/rerank/status
 ### Warming Strategy
 
 1. **Scheduled Execution**: Cron trigger runs every 4 minutes
-2. **Service Check**: Only warms services marked as active in KV storage
-3. **Random Order**: Services are warmed in random order
-4. **Natural Delays**: 5-15 second random delays between requests
-5. **Query Variation**: Uses rotating sample queries to avoid detection
-6. **Skip Logic**: 10% chance to skip each service per cycle
+2. **Multiple Calls**: Each service receives 3-5 warming calls per cycle
+3. **Random Spacing**: 1-5 second delays between individual calls
+4. **Service Order**: Services are warmed in random order
+5. **Natural Delays**: 5-15 second delays between different services
+6. **Query Variation**: Uses rotating sample queries to avoid detection
+7. **Skip Logic**: 10% chance to skip each service per cycle
+8. **Worker Pool Coverage**: Multiple calls ensure all RunPod workers are warmed
 
 ### Sample Data
 
