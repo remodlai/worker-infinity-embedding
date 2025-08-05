@@ -77,3 +77,12 @@ The service supports two API styles:
 ## Development Guidelines
 
 - You must have me run docker build commands
+
+## Performance Optimization
+
+- **Worker Warm-keeping**: RunPod serverless workers have a ~5 minute timeout. To maintain sub-200ms response times, implement a randomized warm-keeping strategy:
+  - Schedule requests every 3-5 minutes with random delays (180-300 seconds)
+  - Vary request content slightly (different queries)
+  - Randomize request order between services
+  - Cost: ~$0.45/month for 24/7 warm workers
+  - Benefit: 100x faster response times (200ms vs 15-20s cold start)

@@ -46,7 +46,7 @@ ADD src .
 # Add test input
 COPY test_input.json /test_input.json
 
-# Expose the RunPod serverless port
+# Expose port for local testing
 EXPOSE 8000
 
 # Use ENTRYPOINT and CMD as recommended by RunPod

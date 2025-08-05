@@ -1,0 +1,17 @@
+{
+  "input": {
+    "openai_route": "/v1/rerank",
+    "openai_input": {
+      "query": "What product offers the best warranty coverage?",
+      "documents": [
+        "Product A comes with a comprehensive 2-year warranty covering all parts and labor",
+        "Product B includes a lifetime warranty but only covers manufacturing defects",
+        "Product C has a 90-day limited warranty with no coverage for wear and tear",
+        "Product D offers extended warranty options up to 5 years for additional cost",
+        "Product E provides 1-year standard warranty with free shipping for repairs"
+      ],
+      "return_documents": true,
+      "top_k": 3
+    }
+  }
+}

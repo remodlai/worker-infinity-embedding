@@ -1,262 +1,302 @@
-![Infinity Embedding Worker Banner](https://cpjrphpz3t5wbwfe.public.blob.vercel-storage.com/worker-infinity-embedding_banner-9n86vTARpwknMZYnXHAUr7xJisiWXs.jpeg)
+# LexIQ Vectors
+
+**Production-Ready Text Embeddings & Reranking API by Remodl AI**
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Platform-LexIQ-blue" alt="Platform">
+  <img src="https://img.shields.io/badge/Models-Qwen3-green" alt="Models">
+  <img src="https://img.shields.io/badge/API-OpenAI%20Compatible-orange" alt="API">
+</p>
 
 ---
 
-High-throughput, OpenAI-compatible text embedding & reranker powered by [Infinity](https://github.com/michaelfeil/infinity) with **Qwen3** models
+## Overview
 
-**Now with instruction-aware embeddings for improved search performance!**
+LexIQ Vectors is a high-performance text embedding and reranking service developed by Remodl AI, Inc. It provides state-of-the-art multilingual text embeddings and document reranking through an OpenAI-compatible API, powered by Qwen3 models optimized for search and retrieval tasks.
 
----
+### Key Features
 
-[![RunPod](https://api.runpod.io/badge/runpod-workers/worker-infinity-embedding)](https://www.runpod.io/console/hub/runpod-workers/worker-infinity-embedding)
-
----
-
-1. [Quickstart](#quickstart)
-2. [Endpoint Configuration](#endpoint-configuration)
-3. [API Specification](#api-specification)
-   1. [List Models](#list-models)
-   2. [Create Embeddings](#create-embeddings)
-   3. [Rerank Documents](#rerank-documents)
-4. [Usage](#usage)
-5. [Further Documentation](#further-documentation)
-6. [Acknowledgements](#acknowledgements)
+- **🚀 Ultra-Fast Performance**: Sub-200ms response times when warm
+- **🌐 100+ Languages**: Full multilingual support out of the box
+- **🔍 Instruction-Aware**: Boost search quality by 1-5% with custom instructions
+- **🔄 OpenAI Compatible**: Drop-in replacement for OpenAI embeddings
+- **📊 Advanced Reranking**: Optimize search results with state-of-the-art reranking
+- **🏗️ Enterprise Ready**: Built on RunPod serverless infrastructure for scale
 
 ---
 
-## Quickstart
+## Tech Stack
 
-1. 🐳 **Use our image** – `ghcr.io/remodlai/worker-infinity-embedding:qwen3-0.6B-unified-v6`
-2. 🔧 **Configure** – Pre-configured with Qwen3-Embedding-0.6B and Qwen3-Reranker-0.6B
-3. 🚀 **Deploy** – create a [RunPod Serverless endpoint](https://docs.runpod.io/serverless/endpoints/manage-endpoints)
-4. 🧪 **Call the API** – follow the examples in the [Usage](#usage) section
-
----
-
-## Pre-configured Models
-
-This worker comes pre-configured with:
-- **Qwen3-Embedding-0.6B**: State-of-the-art multilingual embeddings (1024 dimensions)
-- **Qwen3-Reranker-0.6B**: High-quality reranking model for search result optimization
-
-Both models support over 100 languages and have been optimized for search and retrieval tasks.
-
-## Endpoint Configuration
-
-All behaviour is controlled through environment variables:
-
-| Variable                 | Required | Default | Description                                                                                                      |
-| ------------------------ | -------- | ------- | ---------------------------------------------------------------------------------------------------------------- |
-| `MODEL_NAMES`            | **Yes**  | —       | One or more Hugging-Face model IDs. Separate multiple IDs with a semicolon.<br>Example: `BAAI/bge-small-en-v1.5` |
-| `BATCH_SIZES`            | No       | `32`    | Per-model batch size; semicolon-separated list matching `MODEL_NAMES`.                                           |
-| `BACKEND`                | No       | `torch` | Inference engine for _all_ models: `torch`, `optimum`, or `ctranslate2`.                                         |
-| `DTYPES`                 | No       | `auto`  | Precision per model (`auto`, `fp16`, `fp8`). Semicolon-separated, must match `MODEL_NAMES`.                      |
-| `INFINITY_QUEUE_SIZE`    | No       | `48000` | Max items queueable inside the Infinity engine.                                                                  |
-| `RUNPOD_MAX_CONCURRENCY` | No       | `300`   | Max concurrent requests the RunPod wrapper will accept.                                                          |
+- **Models**: Qwen3-Embedding-0.6B & Qwen3-Reranker-0.6B
+- **Infrastructure**: RunPod Serverless GPU Workers
+- **Engine**: Infinity (high-throughput inference)
+- **API**: OpenAI-compatible REST endpoints
+- **Container**: Docker with CUDA 12.4.1 support
 
 ---
 
-## API Specification
+## API Endpoints
 
-Two flavours, one schema.
+### Production Base URL
+```
+https://api.lexiq.dev
+```
 
-- **OpenAI-compatible** – drop-in replacement for `/v1/models`, `/v1/embeddings`, so you can use this endpoint instead of the API from OpenAI by replacing the base url with the URL of your endpoint: `https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1` and use your [API key from RunPod](https://docs.runpod.io/get-started/api-keys) instead of the one from OpenAI
-- **Standard RunPod** – call `/run` or `/runsync` with a JSON body under the `input` key.  
-  Base URL: `https://api.runpod.ai/v2/<ENDPOINT_ID>`
+### Available Endpoints
 
-Except for transport (path + wrapper object) the JSON you send/receive is identical. The tables below describe the shared payload.
+- `POST /openai/v1/models` - List available models
+- `POST /openai/v1/embeddings` - Generate embeddings
+- `POST /openai/v1/rerank` - Rerank documents
 
-### List Models
+---
 
-| Method | Path                | Body                                            |
-| ------ | ------------------- | ----------------------------------------------- |
-| `GET`  | `/openai/v1/models` | –                                               |
-| `POST` | `/runsync`          | `{ "input": { "openai_route": "/v1/models" } }` |
+## Quick Start
 
-#### Response
+### Using OpenAI SDK
 
-```jsonc
-{
-  "data": [
-    { "id": "BAAI/bge-small-en-v1.5", "stats": {} },
-    { "id": "intfloat/e5-large-v2", "stats": {} }
-  ]
+```python
+from openai import OpenAI
+
+# Initialize client
+client = OpenAI(
+    api_key="your-lexiq-api-key",
+    base_url="https://api.lexiq.dev/openai"
+)
+
+# Generate embeddings
+response = client.embeddings.create(
+    model="Qwen3-Embedding-0.6B",
+    input="What is machine learning?",
+    extra_body={
+        "prompt_type": "query"  # Optimize for search queries
+    }
+)
+
+embedding = response.data[0].embedding
+```
+
+### Using Requests
+
+```python
+import requests
+
+# Generate embeddings
+response = requests.post(
+    "https://api.lexiq.dev/openai/v1/embeddings",
+    headers={
+        "Authorization": "Bearer your-lexiq-api-key",
+        "Content-Type": "application/json"
+    },
+    json={
+        "model": "Qwen3-Embedding-0.6B",
+        "input": "What is machine learning?",
+        "extra_body": {
+            "prompt_type": "query"
+        }
+    }
+)
+
+embedding = response.json()["data"][0]["embedding"]
+```
+
+---
+
+## Advanced Usage
+
+### Instruction-Aware Embeddings
+
+Improve search quality by using different instructions for queries vs documents:
+
+#### For Search Queries
+```python
+# Using built-in optimization
+embedding = client.embeddings.create(
+    model="Qwen3-Embedding-0.6B",
+    input="How to implement neural networks?",
+    extra_body={
+        "prompt_type": "query"
+    }
+)
+
+# Or with custom instruction
+embedding = client.embeddings.create(
+    model="Qwen3-Embedding-0.6B",
+    input="How to implement neural networks?",
+    extra_body={
+        "instruction": "Represent this programming question for finding code examples"
+    }
+)
+```
+
+#### For Documents
+```python
+# Documents typically don't need instructions
+embedding = client.embeddings.create(
+    model="Qwen3-Embedding-0.6B",
+    input="Neural networks are a fundamental component of deep learning..."
+)
+```
+
+### Document Reranking
+
+Optimize search results by reranking documents based on relevance:
+
+```python
+# Rerank documents
+response = requests.post(
+    "https://api.lexiq.dev/openai/v1/rerank",
+    headers={
+        "Authorization": "Bearer your-lexiq-api-key",
+        "Content-Type": "application/json"
+    },
+    json={
+        "query": "What product has the best warranty?",
+        "documents": [
+            "Product A: 2-year comprehensive warranty",
+            "Product B: Lifetime limited warranty", 
+            "Product C: 90-day warranty",
+            "Product D: 5-year extended warranty available"
+        ],
+        "return_documents": True,
+        "top_k": 3
+    }
+)
+
+# Results are sorted by relevance score
+for result in response.json()["results"]:
+    print(f"Score: {result['score']:.3f} - {result['document']}")
+```
+
+---
+
+## Performance
+
+### Response Times
+- **Cold Start**: 10-15 seconds (model loading)
+- **Warm Requests**: 100-200ms (embeddings), 130-180ms (reranking)
+- **Throughput**: Up to 300 concurrent requests
+
+### Model Specifications
+- **Embedding Dimensions**: 1024
+- **Max Sequence Length**: 32,768 tokens
+- **Batch Processing**: Optimized for batches up to 32
+
+---
+
+## Best Practices
+
+### 1. Use Appropriate Instructions
+- **Search Queries**: Always use `prompt_type: "query"` or custom search instructions
+- **Documents**: Use raw text without instructions for best results
+- **Domain-Specific**: Create custom instructions for specialized use cases
+
+### 2. Batch Processing
+```python
+# Process multiple texts in one request
+embeddings = client.embeddings.create(
+    model="Qwen3-Embedding-0.6B",
+    input=[
+        "First document",
+        "Second document",
+        "Third document"
+    ]
+)
+```
+
+### 3. Combine Embedding + Reranking
+```python
+# Step 1: Embed query
+query_embedding = client.embeddings.create(
+    model="Qwen3-Embedding-0.6B",
+    input="user search query",
+    extra_body={"prompt_type": "query"}
+)
+
+# Step 2: Vector search in your database
+candidates = vector_db.search(query_embedding, top_k=100)
+
+# Step 3: Rerank top candidates
+reranked = requests.post(
+    "https://api.lexiq.dev/openai/v1/rerank",
+    headers={"Authorization": "Bearer your-key"},
+    json={
+        "query": "user search query",
+        "documents": candidates,
+        "top_k": 10
+    }
+)
+```
+
+---
+
+## Custom Instructions Examples
+
+### Academic Search
+```python
+extra_body={
+    "instruction": "Represent this query for finding academic research papers"
+}
+```
+
+### Code Search
+```python
+extra_body={
+    "instruction": "Represent this query for finding code implementations and examples"
+}
+```
+
+### Product Search
+```python
+extra_body={
+    "instruction": "Represent this query for e-commerce product search"
+}
+```
+
+### FAQ/Support
+```python
+extra_body={
+    "instruction": "Represent this question for finding answers in documentation"
 }
 ```
 
 ---
 
-### Create Embeddings
+## Error Handling
 
-#### Request Fields (shared)
+All errors follow the OpenAI error format:
 
-| Field   | Type                | Required | Description                                       |
-| ------- | ------------------- | -------- | ------------------------------------------------- |
-| `model` | string              | **Yes**  | One of the IDs supplied via `MODEL_NAMES`.        |
-| `input` | string &#124; array | **Yes**  | A single text string _or_ list of texts to embed. |
-| `instruction` | string         | No       | Custom instruction to prepend (for instruction-aware models) |
-| `prompt_type` | string         | No       | Use built-in prompts: `"query"` or `"document"` |
-
-**Note:** For OpenAI-compatible endpoints, pass `instruction` and `prompt_type` inside `extra_body`.
-
-OpenAI route vs. Standard:
-
-| Flavour  | Method | Path             | Body                                          |
-| -------- | ------ | ---------------- | --------------------------------------------- |
-| OpenAI   | `POST` | `/v1/embeddings` | `{ "model": "…", "input": "…" }`              |
-| Standard | `POST` | `/runsync`       | `{ "input": { "model": "…", "input": "…" } }` |
-
-#### Response (both flavours)
-
-```jsonc
+```json
 {
-  "object": "list",
-  "model": "BAAI/bge-small-en-v1.5",
-  "data": [
-    { "object": "embedding", "embedding": [0.01, -0.02 /* … */], "index": 0 }
-  ],
-  "usage": { "prompt_tokens": 2, "total_tokens": 2 }
-}
-```
-
----
-
-### Rerank Documents (Standard only)
-
-| Field         | Type   | Required | Description                                                       |
-| ------------- | ------ | -------- | ----------------------------------------------------------------- |
-| `model`       | string | **Yes**  | Any deployed reranker model                                       |
-| `query`       | string | **Yes**  | The search/query text                                             |
-| `docs`        | array  | **Yes**  | List of documents to rerank                                       |
-| `return_docs` | bool   | No       | If `true`, return the documents in ranked order (default `false`) |
-
-Call pattern
-
-```http
-POST /runsync
-Content-Type: application/json
-
-{
-  "input": {
-    "model": "BAAI/bge-reranker-large",
-    "query": "Which product has warranty coverage?",
-    "docs": [
-      "Product A comes with a 2-year warranty",
-      "Product B is available in red and blue colors",
-      "All electronics include a standard 1-year warranty"
-    ],
-    "return_docs": true
+  "error": {
+    "message": "Model not found",
+    "type": "invalid_request_error",
+    "code": "model_not_found"
   }
 }
 ```
 
-Response contains either `scores` or the full `docs` list, depending on `return_docs`.
+Common error types:
+- `invalid_request_error` - Invalid parameters
+- `authentication_error` - Invalid API key
+- `rate_limit_error` - Too many requests
+- `internal_error` - Server error
 
 ---
 
-## Instruction-Aware Embeddings (Qwen3)
+## Support
 
-Qwen3 models support instruction-aware embeddings that can improve search performance by 1-5%. Use different instructions for queries vs documents:
-
-### For Search Queries
-```json
-{
-  "instruction": "Given a web search query, retrieve relevant passages that answer the query",
-  "prompt_type": "query"
-}
-```
-
-### For Documents
-Documents typically don't need instructions (use raw text for best results).
-
-### Custom Instructions
-You can provide task-specific instructions:
-- **Academic Search**: "Represent this query for finding research papers"
-- **Code Search**: "Represent this query for finding code examples"
-- **FAQ Search**: "Represent this question for finding answers in documentation"
-
-## Usage
-
-Below are minimal `curl` snippets so you can copy-paste from any machine.
-
-> Replace `<ENDPOINT_ID>` with your endpoint ID and `<API_KEY>` with a [RunPod API key](https://docs.runpod.io/get-started/api-keys).
-
-### OpenAI-Compatible Calls
-
-```bash
-# List models
-curl -H "Authorization: Bearer <API_KEY>" \
-     https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/models
-
-# Create embeddings (basic)
-curl -X POST \
-  -H "Authorization: Bearer <API_KEY>" \
-  -H "Content-Type: application/json" \
-  -d '{"model":"/models/Qwen3-Embedding-0.6B","input":"Hello world"}' \
-  https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/embeddings
-
-# Create embeddings with instruction (for search queries)
-curl -X POST \
-  -H "Authorization: Bearer <API_KEY>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model":"/models/Qwen3-Embedding-0.6B",
-    "input":"What is machine learning?",
-    "extra_body":{
-      "prompt_type":"query"
-    }
-  }' \
-  https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/embeddings
-```
-
-### Standard RunPod Calls
-
-```bash
-# Create embeddings (basic)
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"input":{"model":"/models/Qwen3-Embedding-0.6B","input":"Hello world"}}' \
-  https://api.runpod.ai/v2/<ENDPOINT_ID>/runsync
-
-# Create embeddings with instruction
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -d '{
-    "input":{
-      "model":"/models/Qwen3-Embedding-0.6B",
-      "input":"What is machine learning?",
-      "instruction":"Given a web search query, retrieve relevant passages that answer the query"
-    }
-  }' \
-  https://api.runpod.ai/v2/<ENDPOINT_ID>/runsync
-
-# Rerank
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -d '{
-    "input":{
-      "model":"/models/Qwen3-Reranker-0.6B",
-      "query":"Which product has warranty coverage?",
-      "docs":[
-        "Product A comes with a 2-year warranty",
-        "Product B is available in red and blue colors",
-        "All electronics include a standard 1-year warranty"
-      ],
-      "return_docs":true
-    }
-  }' \
-  https://api.runpod.ai/v2/<ENDPOINT_ID>/runsync
-```
+- **Documentation**: https://docs.lexiq.dev
+- **API Status**: https://status.lexiq.dev
+- **Support**: support@remodlai.com
 
 ---
 
-## Further Documentation
+## About Remodl AI
 
-- **[Infinity Engine](https://github.com/michaelfeil/infinity)** – how the ultra-fast backend works.
-- **[RunPod Docs](https://docs.runpod.io/)** – serverless concepts, limits, and API reference.
+Remodl AI, Inc. is dedicated to building production-ready AI infrastructure that scales. LexIQ Vectors is part of the LexIQ platform, providing enterprise-grade AI capabilities for modern applications.
 
 ---
 
-## Acknowledgements
-
-Special thanks to [Michael Feil](https://github.com/michaelfeil) for creating the Infinity engine and for his ongoing support of this project.
+<p align="center">
+  <i>Built with ❤️ by Remodl AI, Inc.</i>
+</p>

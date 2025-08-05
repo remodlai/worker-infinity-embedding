@@ -1,24 +1,31 @@
 {
-  "mcpServers": {
-    "context7-mcp": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@smithery/cli@latest",
-        "run",
-        "@upstash/context7-mcp",
-        "--key",
-        "df828e68-71a3-4d4e-8aa2-36472623e72d",
-        "--profile",
-        "harsh-goose-KDfASJ"
-      ]
-    },
-    "sequential-thinking": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
-      ]
+    "mcpServers": {
+      "context7-mcp": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@smithery/cli@latest",
+          "run",
+          "@upstash/context7-mcp",
+          "--key",
+          "df828e68-71a3-4d4e-8aa2-36472623e72d",
+          "--profile",
+          "harsh-goose-KDfASJ"
+        ]
+      },
+      "sequential-thinking": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@modelcontextprotocol/server-sequential-thinking"
+        ]
+      },
+      "firecrawl-mcp": {
+        "command": "npx",
+        "args": ["-y", "firecrawl-mcp"],
+        "env": {
+          "FIRECRAWL_API_KEY": "fc-c2b139dc683a43c195b3acf8ec8da06b"
+        }
+      }
     }
   }
-}

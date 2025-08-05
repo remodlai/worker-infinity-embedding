@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  reranker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - MODEL_NAME=/models/Qwen3-Reranker-0.6B
+      - USE_FLASH_ATTENTION=false
+      - TORCH_DTYPE=float16
+      - RUNPOD_MAX_CONCURRENCY=10
+    volumes:
+      - ./test_input.json:/test_input.json
+      - ./data/runpod-volume:/runpod-volume
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    command: python -u /handler.py

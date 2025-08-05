@@ -1,0 +1,7 @@
+runpod~=1.7.0
+torch>=2.0.0
+transformers>=4.51.0
+accelerate
+sentencepiece
+protobuf
+einops
