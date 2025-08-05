@@ -142,7 +142,7 @@ embedding = client.embeddings.create(
 Optimize search results by reranking documents based on relevance:
 
 ```python
-# Rerank documents
+# Rerank documents with default instruction
 response = requests.post(
     "https://api.lexiq.dev/openai/v1/rerank",
     headers={
@@ -157,6 +157,24 @@ response = requests.post(
             "Product C: 90-day warranty",
             "Product D: 5-year extended warranty available"
         ],
+        "return_documents": True,
+        "top_k": 3
+    }
+)
+
+# Or with custom instruction
+response = requests.post(
+    "https://api.lexiq.dev/openai/v1/rerank",
+    headers={
+        "Authorization": "Bearer your-lexiq-api-key",
+        "Content-Type": "application/json"
+    },
+    json={
+        "query": "What product has the best warranty?",
+        "documents": [...],
+        "extra_body": {
+            "instruction": "Find products with the longest warranty duration and best coverage terms"
+        },
         "return_documents": True,
         "top_k": 3
     }

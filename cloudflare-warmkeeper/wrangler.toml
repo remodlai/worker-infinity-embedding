@@ -1,0 +1,23 @@
+name = "lexiq-vectors-warmkeeper"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# Cron triggers - run every 3-5 minutes with some randomization
+[triggers]
+crons = ["*/4 * * * *"]  # Every 4 minutes
+
+# Environment variables
+[vars]
+EMBEDDING_ENDPOINT = "https://api.runpod.ai/v2/ejt982twe0i4dw/runsync"
+RERANKER_ENDPOINT = "https://api.runpod.ai/v2/b7xq50w5e7zvyo/runsync"
+
+# Secrets (set these in Cloudflare dashboard)
+# RUNPOD_API_KEY = "your-key-here"
+
+# KV namespace for storing service configuration
+[[kv_namespaces]]
+binding = "WARMKEEPER_KV"
+id = "cdd7e706095b43bca452a29a0dc3bb31"
+
+# Routes handled by Zuplo API Gateway
+# The actual routing is managed by Zuplo, not directly by this worker
