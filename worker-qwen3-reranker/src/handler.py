@@ -138,33 +138,9 @@ def handler(job: Dict[str, Any]) -> Dict[str, Any]:
 
 
 
-# For local testing
+# Start RunPod serverless handler
 if __name__ == "__main__":
-    # Test with sample data
-    test_job = {
-        "input": {
-            "query": "What product has the best warranty?",
-            "documents": [
-                "Product A comes with a comprehensive 2-year warranty covering all parts and labor",
-                "Product B includes a lifetime warranty but only covers manufacturing defects",
-                "Product C has a 90-day limited warranty with no coverage for wear and tear",
-                "Product D offers extended warranty options up to 5 years for additional cost",
-                "Product E provides 1-year standard warranty with free shipping for repairs"
-            ],
-            "return_documents": True,
-            "top_k": 3
-        }
-    }
-    
-    print("Testing reranker with sample data...")
-    result = handler(test_job)
-    
-    import json
-    print(json.dumps(result, indent=2))
-    
-    # If running in RunPod, start the serverless handler
-    if os.environ.get("RUNPOD_POD_ID"):
-        runpod.serverless.start({
-            "handler": handler,
-            "concurrency_modifier": lambda x: reranker_service.config.runpod_max_concurrency
-        })
+    runpod.serverless.start({
+        "handler": handler,
+        "concurrency_modifier": lambda x: reranker_service.config.runpod_max_concurrency
+    })

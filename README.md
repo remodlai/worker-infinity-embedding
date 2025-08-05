@@ -65,7 +65,7 @@ client = OpenAI(
 
 # Generate embeddings
 response = client.embeddings.create(
-    model="Qwen3-Embedding-0.6B",
+    model="models/Qwen3-Embedding-0.6B",
     input="What is machine learning?",
     extra_body={
         "prompt_type": "query"  # Optimize for search queries
@@ -88,7 +88,7 @@ response = requests.post(
         "Content-Type": "application/json"
     },
     json={
-        "model": "Qwen3-Embedding-0.6B",
+        "model": "models/Qwen3-Embedding-0.6B",
         "input": "What is machine learning?",
         "extra_body": {
             "prompt_type": "query"
@@ -111,7 +111,7 @@ Improve search quality by using different instructions for queries vs documents:
 ```python
 # Using built-in optimization
 embedding = client.embeddings.create(
-    model="Qwen3-Embedding-0.6B",
+    model="models/Qwen3-Embedding-0.6B",
     input="How to implement neural networks?",
     extra_body={
         "prompt_type": "query"
@@ -120,7 +120,7 @@ embedding = client.embeddings.create(
 
 # Or with custom instruction
 embedding = client.embeddings.create(
-    model="Qwen3-Embedding-0.6B",
+    model="models/Qwen3-Embedding-0.6B",
     input="How to implement neural networks?",
     extra_body={
         "instruction": "Represent this programming question for finding code examples"
@@ -132,7 +132,7 @@ embedding = client.embeddings.create(
 ```python
 # Documents typically don't need instructions
 embedding = client.embeddings.create(
-    model="Qwen3-Embedding-0.6B",
+    model="models/Qwen3-Embedding-0.6B",
     input="Neural networks are a fundamental component of deep learning..."
 )
 ```
@@ -212,7 +212,7 @@ for result in response.json()["results"]:
 ```python
 # Process multiple texts in one request
 embeddings = client.embeddings.create(
-    model="Qwen3-Embedding-0.6B",
+    model="models/Qwen3-Embedding-0.6B",
     input=[
         "First document",
         "Second document",
@@ -225,7 +225,7 @@ embeddings = client.embeddings.create(
 ```python
 # Step 1: Embed query
 query_embedding = client.embeddings.create(
-    model="Qwen3-Embedding-0.6B",
+    model="models/Qwen3-Embedding-0.6B",
     input="user search query",
     extra_body={"prompt_type": "query"}
 )
